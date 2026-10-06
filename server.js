@@ -104,6 +104,7 @@ async function migrate() {
     yappy_handle: '',     // ej. @samgers  (Directorio Yappy)
     yappy_phone: '',      // ej. 6000-0000
     yappy_name: '',       // nombre que verá el cliente en Yappy
+    yappy_link: 'com.yappy://?hash=vPp2vMQeNLNG8HUosQiQjMdQqwd9OkxqG3vri3u0a66MZyI9RNRV23wt7H2Z1X5X', // enlace del QR de cobro
     whatsapp: '',         // número para avisar del pago
     disclaimer: 'Solo para mayores de 18 años. Los pronósticos no garantizan ganancias. Apuesta con responsabilidad.',
   };
@@ -215,7 +216,7 @@ app.get('/api/config', wrap(async (_req, res) => {
     app_name: APP_NAME,
     today: todayPanama(),
     plans,
-    yappy: { handle: s.yappy_handle, phone: s.yappy_phone, name: s.yappy_name },
+    yappy: { handle: s.yappy_handle, phone: s.yappy_phone, name: s.yappy_name, link: s.yappy_link },
     whatsapp: s.whatsapp,
     disclaimer: s.disclaimer,
   });
@@ -401,7 +402,7 @@ admin.get('/settings', wrap(async (_req, res) => {
 }));
 
 admin.put('/settings', wrap(async (req, res) => {
-  const allowed = ['yappy_handle', 'yappy_phone', 'yappy_name', 'whatsapp', 'disclaimer'];
+  const allowed = ['yappy_handle', 'yappy_phone', 'yappy_name', 'yappy_link', 'whatsapp', 'disclaimer'];
   for (const k of allowed) {
     if (k in req.body) await q('UPDATE settings SET value=$1 WHERE key=$2', [String(req.body[k]).slice(0, 400), k]);
   }
