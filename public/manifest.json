@@ -1,0 +1,10 @@
+{
+  "name": "BETSAM",
+  "short_name": "BETSAM",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#123D30",
+  "theme_color": "#123D30",
+  "lang": "es",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

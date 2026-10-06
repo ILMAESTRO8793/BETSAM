@@ -1,0 +1,16 @@
+{
+  "name": "betsam",
+  "version": "1.0.0",
+  "description": "Dashboard de parlays diarios con suscripción pagada por Yappy (Panamá)",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.6",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.12.0"
+  }
+}

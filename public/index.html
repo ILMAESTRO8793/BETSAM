@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#123D30">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon.svg">
+<title>BETSAM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --felt:#123D30; --felt-deep:#0C2C22; --felt-line:#1F5543;
+  --paper:#FAF6EA; --paper-edge:#E9E1C9; --ink:#1C211E; --ink-soft:#5B6259;
+  --gold:#D9A520; --gold-ink:#8A6400; --won:#1F7A4A; --lost:#B83227; --void:#6E6E6E;
+  --display:"Barlow Condensed", "Arial Narrow", sans-serif;
+  --body:"Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--felt);color:var(--paper);font:16px/1.5 var(--body);
+  background-image:radial-gradient(circle at 50% -20%, #1A5040 0%, transparent 60%);background-repeat:no-repeat;}
+a{color:inherit}
+button,input,select,textarea{font:inherit}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--felt-deep);border-bottom:1px solid var(--felt-line)}
+.bar{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:10px 16px}
+.brand{font:800 22px/1 var(--display);letter-spacing:.02em;text-decoration:none;margin-right:auto}
+.brand small{display:block;font:500 12px/1.2 var(--body);letter-spacing:0;color:#9DBDAF}
+nav.tabs{max-width:760px;margin:0 auto;display:flex;gap:4px;padding:0 10px 8px;overflow-x:auto}
+nav.tabs a{flex:0 0 auto;text-decoration:none;padding:7px 12px;border-radius:999px;font-weight:600;font-size:15px;color:#C9DDD3}
+nav.tabs a[aria-current="page"]{background:var(--paper);color:var(--ink)}
+.chip{font:600 13px var(--body);padding:4px 10px;border-radius:999px;border:1px solid var(--felt-line);color:#C9DDD3;white-space:nowrap}
+.chip.on{background:var(--won);border-color:var(--won);color:#fff}
+
+main{max-width:760px;margin:0 auto;padding:20px 16px 60px}
+h1{font:700 34px/1.05 var(--display);margin:4px 0 6px;letter-spacing:.01em}
+h2{font:700 24px/1.1 var(--display);margin:28px 0 10px}
+p.lead{color:#C9DDD3;margin:0 0 18px;max-width:60ch}
+.muted{color:#9DBDAF}
+
+/* ---------- el ticket ---------- */
+.ticket{position:relative;background:var(--paper);color:var(--ink);margin:18px 0 26px;padding:22px 20px 18px;
+  --tooth:9px;
+  -webkit-mask:radial-gradient(circle var(--tooth) at 50% 0,#0000 98%,#000) 50% 0/calc(var(--tooth)*2.4) 51% repeat-x,
+               radial-gradient(circle var(--tooth) at 50% 100%,#0000 98%,#000) 50% 100%/calc(var(--tooth)*2.4) 51% repeat-x;
+          mask:radial-gradient(circle var(--tooth) at 50% 0,#0000 98%,#000) 50% 0/calc(var(--tooth)*2.4) 51% repeat-x,
+               radial-gradient(circle var(--tooth) at 50% 100%,#0000 98%,#000) 50% 100%/calc(var(--tooth)*2.4) 51% repeat-x;
+  filter:drop-shadow(0 6px 0 rgba(0,0,0,.18));}
+.t-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding-bottom:12px;border-bottom:2px solid var(--ink)}
+.t-title{font:800 26px/1 var(--display);text-transform:none}
+.t-date{font:500 14px var(--body);color:var(--ink-soft)}
+.stamp{font:800 16px/1 var(--display);padding:6px 10px;border:3px solid currentColor;border-radius:6px;transform:rotate(-6deg);white-space:nowrap}
+.stamp.won{color:var(--won)} .stamp.lost{color:var(--lost)} .stamp.void{color:var(--void)} .stamp.pending{color:var(--gold-ink);border-style:dashed}
+.leg{display:grid;grid-template-columns:1fr auto;gap:2px 14px;padding:12px 0;border-bottom:1px dashed #B9B19A}
+.leg:last-of-type{border-bottom:0}
+.leg .meta{font-size:13px;color:var(--ink-soft);grid-column:1/-1}
+.leg .match{font-weight:600}
+.leg .pick{font:700 20px/1.15 var(--display);color:var(--ink)}
+.leg .odds{grid-row:2/4;grid-column:2;align-self:center;font:800 26px/1 var(--display);color:var(--gold-ink)}
+.t-total{display:flex;justify-content:space-between;align-items:baseline;border-top:2px solid var(--ink);padding-top:12px;margin-top:4px}
+.t-total .lbl{font:600 15px var(--body)}
+.t-total .val{font:800 46px/1 var(--display);color:var(--ink)}
+.t-total .val small{font:600 18px var(--display);color:var(--ink-soft);margin-left:6px}
+.t-notes{margin-top:10px;font-size:15px;color:var(--ink-soft);white-space:pre-wrap}
+.t-stake{font-weight:600;color:var(--ink)}
+.locked .leg{filter:blur(5px);user-select:none;pointer-events:none}
+.lock-cover{position:absolute;inset:70px 16px 16px;display:grid;place-items:center;text-align:center}
+.lock-cover div{background:var(--ink);color:var(--paper);padding:16px 18px;border-radius:10px;max-width:300px}
+.lock-cover b{display:block;font:700 22px/1.1 var(--display);margin-bottom:6px}
+
+/* ---------- UI ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:10px;padding:12px 18px;
+  font-weight:600;cursor:pointer;text-decoration:none;background:var(--gold);color:#1B1300}
+.btn:hover{filter:brightness(1.06)}
+.btn.ghost{background:transparent;color:var(--paper);border:1.5px solid #4F7F6D}
+.btn.dark{background:var(--ink);color:var(--paper)}
+.btn.small{padding:7px 12px;font-size:14px;border-radius:8px}
+.btn.red{background:var(--lost);color:#fff} .btn.green{background:var(--won);color:#fff}
+.btn[disabled]{opacity:.55;cursor:wait}
+.panel{background:var(--felt-deep);border:1px solid var(--felt-line);border-radius:14px;padding:18px;margin:14px 0}
+.paper{background:var(--paper);color:var(--ink);border-radius:14px;padding:18px;margin:14px 0}
+.paper .muted{color:var(--ink-soft)}
+label{display:block;font-weight:600;font-size:14px;margin:12px 0 5px}
+input,select,textarea{width:100%;padding:11px 12px;border-radius:9px;border:1.5px solid #C9C0A6;background:#fff;color:var(--ink)}
+.panel input,.panel select,.panel textarea{border-color:var(--felt-line);background:#0A251D;color:var(--paper)}
+textarea{min-height:80px;resize:vertical}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1 1 140px}
+.actions{display:flex;flex-wrap:wrap;gap:6px;margin:-14px 0 26px}.actions>*{flex:0 0 auto}
+.err{background:#4A1410;color:#FFD9D4;border-radius:9px;padding:10px 12px;margin:10px 0;font-size:15px}
+.ok{background:#123F28;color:#CFF5DE;border-radius:9px;padding:10px 12px;margin:10px 0;font-size:15px}
+.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:16px 0}
+.plan{background:var(--paper);color:var(--ink);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:6px}
+.plan .price{font:800 48px/1 var(--display)}
+.plan .price small{font:600 18px var(--display);color:var(--ink-soft)}
+.plan .name{font:700 22px var(--display)}
+.steps{counter-reset:s;list-style:none;padding:0;margin:0}
+.steps li{counter-increment:s;position:relative;padding:0 0 16px 44px}
+.steps li::before{content:counter(s);position:absolute;left:0;top:-2px;width:30px;height:30px;border-radius:50%;
+  background:var(--ink);color:var(--paper);display:grid;place-items:center;font:700 17px var(--display)}
+.big-code{font:800 34px/1 var(--display);letter-spacing:.06em;background:#fff;border:2px dashed var(--ink);border-radius:8px;padding:8px 12px;display:inline-block}
+.record{display:flex;gap:18px;align-items:baseline;margin:6px 0 4px}
+.record b{font:800 40px/1 var(--display)}
+.record .w{color:#7FE0A8}.record .l{color:#FF9B90}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{text-align:left;padding:9px 6px;border-bottom:1px solid var(--felt-line);vertical-align:top}
+th{font-weight:600;color:#9DBDAF;font-size:13px}
+.scroll{overflow-x:auto}
+.proof{width:64px;height:64px;object-fit:cover;border-radius:6px;cursor:zoom-in;border:1px solid var(--felt-line)}
+.subtabs{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 12px}
+.leg-row{display:grid;grid-template-columns:110px 1fr 1fr 80px 74px 36px;gap:6px;margin-bottom:6px}
+@media (max-width:620px){.leg-row{grid-template-columns:1fr 1fr;}.leg-row .x{grid-column:2;justify-self:end}}
+.empty{text-align:center;padding:34px 16px;color:#9DBDAF}
+.empty b{display:block;font:700 24px var(--display);color:var(--paper);margin-bottom:4px}
+.disclaimer{font-size:13px;color:#86A99A;text-align:center;margin-top:36px;max-width:60ch;margin-inline:auto}
+dialog{border:0;border-radius:12px;padding:0;max-width:92vw;max-height:88vh;background:#000}
+dialog img{display:block;max-width:92vw;max-height:88vh}
+dialog::backdrop{background:rgba(0,0,0,.75)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--paper);color:var(--ink);
+  padding:10px 16px;border-radius:10px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.35);z-index:50}
+@media (prefers-reduced-motion:no-preference){
+  .ticket.enter{animation:print .5s cubic-bezier(.2,.8,.2,1) both}
+  @keyframes print{from{transform:translateY(-14px);clip-path:inset(0 0 100% 0)}to{transform:none;clip-path:inset(0 0 -20px 0)}}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="bar">
+    <a class="brand" href="#/" id="brand">BETSAM<small>Las jugadas de hoy</small></a>
+    <span class="chip" id="subChip" hidden></span>
+  </div>
+  <nav class="tabs" id="tabs"></nav>
+</header>
+<main id="app" aria-live="polite"></main>
+<dialog id="imgDlg"><img alt="Comprobante de pago"></dialog>
+
+<script>
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const money = (n) => '$' + Number(n).toFixed(2).replace(/\.00$/, '');
+const state = { user: null, config: null };
+
+async function api(path, opts = {}) {
+  const res = await fetch('/api' + path, {
+    method: opts.method || 'GET',
+    headers: opts.body ? { 'Content-Type': 'application/json' } : {},
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+    credentials: 'same-origin',
+  });
+  let data = {};
+  try { data = await res.json(); } catch (_) {}
+  if (!res.ok) throw new Error(data.error || 'No se pudo completar. Revisa tu conexión.');
+  return data;
+}
+function toast(msg) {
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t); setTimeout(() => t.remove(), 2600);
+}
+function fmtDay(iso) {
+  const [y, m, d] = String(iso).slice(0, 10).split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('es-PA', { weekday: 'long', day: 'numeric', month: 'long' });
+}
+function fmtDate(ts) {
+  return new Date(ts).toLocaleString('es-PA', { timeZone: 'America/Panama', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+}
+const STAMP = { won: 'Ganado', lost: 'Perdido', void: 'Nulo', pending: 'En juego' };
+
+/* ---- cuotas: acepta americanas (+150 / -110) o decimales (2.50) ---- */
+function toDecimal(o) {
+  const s = String(o).trim().replace(',', '.');
+  if (!s) return null;
+  const n = parseFloat(s);
+  if (!isFinite(n)) return null;
+  if (/^[+-]/.test(s) || Math.abs(n) >= 100) return n > 0 ? 1 + n / 100 : 1 + 100 / Math.abs(n);
+  return n > 1 ? n : null;
+}
+function toAmerican(d) { return d >= 2 ? '+' + Math.round((d - 1) * 100) : '-' + Math.round(100 / (d - 1)); }
+function combine(legs) {
+  let t = 1;
+  for (const l of legs) { const d = toDecimal(l.odds); if (!d) return ''; t *= d; }
+  return legs.length ? toAmerican(t) + ' (' + t.toFixed(2) + ')' : '';
+}
+
+/* ---------- ticket ---------- */
+function ticketHTML(p, { locked = false } = {}) {
+  const legs = locked
+    ? Array.from({ length: Math.max(p.legs_count || 3, 2) }, () => ({ sport: 'Deporte', match: 'Equipo local vs Equipo visitante', pick: 'Selección oculta', odds: '+000' }))
+    : p.legs;
+  const [american, dec] = String(p.total_odds || '').split(' ');
+  return `
+  <article class="ticket enter ${locked ? 'locked' : ''}">
+    <div class="t-head">
+      <div><div class="t-title">${esc(p.title)}</div>${p.day ? `<div class="t-date">${esc(fmtDay(p.day))}</div>` : ''}</div>
+      <span class="stamp ${esc(p.status)}">${STAMP[p.status] || ''}</span>
+    </div>
+    ${legs.map((l) => `
+      <div class="leg">
+        <span class="meta">${esc(l.sport)}${l.time ? ' · ' + esc(l.time) : ''}</span>
+        <span class="match">${esc(l.match)}</span>
+        <span class="pick">${esc(l.pick)}</span>
+        <span class="odds">${esc(l.odds)}</span>
+      </div>`).join('')}
+    ${!locked && p.total_odds ? `
+      <div class="t-total"><span class="lbl">Cuota combinada${p.stake ? `<br><span class="t-stake">${esc(p.stake)}</span>` : ''}</span>
+      <span class="val">${esc(american)}${dec ? `<small>${esc(dec)}</small>` : ''}</span></div>` : ''}
+    ${!locked && p.notes ? `<div class="t-notes">${esc(p.notes)}</div>` : ''}
+    ${locked ? `<div class="lock-cover"><div><b>${p.legs_count} selecciones listas</b>Suscríbete para ver el parlay completo.<br><br><a class="btn" href="#/planes">Ver planes</a></div></div>` : ''}
+  </article>`;
+}
+
+/* ---------- vistas ---------- */
+const views = {
+  async hoy(app) {
+    const d = await api('/parlays/today');
+    let html = `<h1>Jugadas de hoy</h1><p class="lead">${esc(fmtDay(d.day))}. Copia las selecciones y haz tu apuesta en tu casa de apuestas.</p>`;
+    if (!d.parlays.length) {
+      html += `<div class="empty"><b>Todavía no hay parlay para hoy</b>Lo publicamos antes de los primeros partidos. Vuelve más tarde.</div>`;
+    } else {
+      html += d.parlays.map((p) => ticketHTML(p, { locked: d.locked })).join('');
+    }
+    if (d.locked && !state.user) html += `<p class="muted" style="text-align:center">¿Ya pagaste? <a href="#/entrar">Inicia sesión</a></p>`;
+    app.innerHTML = html;
+  },
+
+  async resultados(app) {
+    const d = await api('/parlays/history');
+    const total = d.stats.won + d.stats.lost;
+    app.innerHTML = `<h1>Resultados</h1>
+      <p class="lead">Todos los parlays cerrados de los últimos 45 días, ganados y perdidos.</p>
+      <div class="record"><span><b class="w">${d.stats.won}</b> ganados</span><span><b class="l">${d.stats.lost}</b> perdidos</span>
+      ${total ? `<span class="muted">${Math.round((d.stats.won / total) * 100)}% de acierto</span>` : ''}</div>
+      ${d.parlays.length ? d.parlays.map((p) => ticketHTML(p)).join('') : `<div class="empty"><b>Aún no hay resultados</b>Aquí verás cada parlay cuando termine.</div>`}`;
+  },
+
+  async planes(app) {
+    const c = state.config;
+    const active = state.user?.active && !state.user?.is_admin;
+    app.innerHTML = `<h1>Planes</h1>
+      <p class="lead">Pagas con Yappy y activamos tu acceso en cuanto confirmamos el pago. Mientras esté activo ves todos los parlays del día.</p>
+      ${active ? `<div class="ok">Tu suscripción está activa hasta el ${esc(fmtDate(state.user.sub_until))}. Si pagas otro plan, los días se suman.</div>` : ''}
+      <div class="plans">${c.plans.map((p) => `
+        <div class="plan">
+          <span class="name">${esc(p.name)}</span>
+          <span class="price">${money(p.price)}<small> / ${p.days} días</small></span>
+          <span class="muted">${p.days >= 28 ? 'El mejor precio por día' : 'Para probar el servicio'}</span>
+          <a class="btn dark" style="margin-top:10px" href="#/pagar/${p.id}">Pagar con Yappy</a>
+        </div>`).join('')}</div>`;
+  },
+
+  async pagar(app, planId) {
+    if (!state.user) { location.hash = '#/registro?next=' + encodeURIComponent('/pagar/' + planId); return; }
+    const plan = state.config.plans.find((p) => String(p.id) === String(planId));
+    if (!plan) { location.hash = '#/planes'; return; }
+    const { payments } = await api('/payments/mine');
+    const pending = payments.find((p) => p.status === 'pending');
+    const y = state.config.yappy;
+    if (pending) { app.innerHTML = pendingHTML(pending); return; }
+    const ABC = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // sin O/0 ni I/1 para evitar confusiones
+    const ref = 'BS' + Array.from({ length: 5 }, () => ABC[Math.floor(Math.random() * ABC.length)]).join('');
+    app.innerHTML = `<h1>Pagar ${esc(plan.name)}</h1>
+      <p class="lead">${money(plan.price)} por ${plan.days} días de acceso.</p>
+      <div class="paper">
+        <ol class="steps">
+          <li>Abre <b>Yappy</b> y envía <b>${money(plan.price)}</b> a
+            ${y.handle ? `<b>${esc(y.handle)}</b> (Directorio)` : ''}${y.handle && y.phone ? ' o al ' : ''}${y.phone ? `<b>${esc(y.phone)}</b>` : ''}${!y.handle && !y.phone ? '<i>el número que te indicamos por WhatsApp</i>' : ''}${y.name ? `, a nombre de <b>${esc(y.name)}</b>` : ''}.</li>
+          <li>En el mensaje del pago escribe este código:<br><span class="big-code">${ref}</span></li>
+          <li>Yappy te muestra un número de confirmación. Escríbelo abajo y sube la captura del pago.</li>
+        </ol>
+      </div>
+      <form id="payForm" class="panel">
+        <label for="tx">Número de confirmación de Yappy</label>
+        <input id="tx" required autocomplete="off" placeholder="Ej. 4F7K2X9Q">
+        <label for="proof">Captura del pago (recomendado)</label>
+        <input id="proof" type="file" accept="image/*">
+        <div id="payErr"></div>
+        <button class="btn" style="margin-top:14px;width:100%">Enviar pago para revisión</button>
+      </form>`;
+    $('#payForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const btn = e.target.querySelector('button'); btn.disabled = true; $('#payErr').innerHTML = '';
+      try {
+        const file = $('#proof').files[0];
+        const proof = file ? await compressImage(file) : null;
+        const { payment } = await api('/payments', { method: 'POST', body: { plan_id: plan.id, yappy_tx: $('#tx').value, proof, ref_code: ref } });
+        app.innerHTML = pendingHTML({ ...payment, plan_name: plan.name, amount: plan.price, yappy_tx: $('#tx')?.value });
+      } catch (err) { $('#payErr').innerHTML = `<div class="err">${esc(err.message)}</div>`; btn.disabled = false; }
+    };
+  },
+
+  async cuenta(app) {
+    if (!state.user) { location.hash = '#/entrar'; return; }
+    const { payments } = await api('/payments/mine');
+    const u = state.user;
+    app.innerHTML = `<h1>Mi cuenta</h1>
+      <div class="panel">
+        <div style="font-weight:600;font-size:18px">${esc(u.name)}</div>
+        <div class="muted">${esc(u.phone)}</div>
+        <p>${u.is_admin ? 'Eres administrador.' : u.active ? `Suscripción activa hasta el <b>${esc(fmtDate(u.sub_until))}</b>.` : 'No tienes una suscripción activa.'}</p>
+        ${!u.is_admin ? `<a class="btn" href="#/planes">${u.active ? 'Añadir más días' : 'Suscribirme'}</a>` : ''}
+      </div>
+      <h2>Mis pagos</h2>
+      ${payments.length ? `<div class="scroll"><table><thead><tr><th>Fecha</th><th>Plan</th><th>Monto</th><th>Estado</th></tr></thead><tbody>
+        ${payments.map((p) => `<tr><td>${esc(fmtDate(p.created_at))}</td><td>${esc(p.plan_name)}</td><td>${money(p.amount)}</td>
+        <td>${{ pending: 'En revisión', approved: 'Aprobado', rejected: 'Rechazado' }[p.status]}${p.note ? `<br><span class="muted">${esc(p.note)}</span>` : ''}</td></tr>`).join('')}
+      </tbody></table></div>` : '<p class="muted">Aún no has hecho pagos.</p>'}
+      <button class="btn ghost" id="logout" style="margin-top:24px">Cerrar sesión</button>`;
+    $('#logout').onclick = async () => { await api('/logout', { method: 'POST' }); state.user = null; location.hash = '#/'; render(); };
+  },
+
+  entrar(app) { authForm(app, 'login'); },
+  registro(app) { authForm(app, 'register'); },
+
+  async admin(app, sub = 'parlays') {
+    if (!state.user?.is_admin) { location.hash = '#/'; return; }
+    const s = await api('/admin/summary');
+    const tabs = [['parlays', 'Parlays'], ['pagos', `Pagos${s.pending ? ' (' + s.pending + ')' : ''}`], ['clientes', 'Clientes'], ['ajustes', 'Ajustes']];
+    app.innerHTML = `<h1>Panel</h1>
+      <div class="record"><span><b>${s.active}</b> activos</span><span><b>${s.pending}</b> pagos por revisar</span><span><b>${money(s.month_income)}</b> este mes</span></div>
+      <div class="subtabs">${tabs.map(([k, l]) => `<a class="btn small ${k === sub ? '' : 'ghost'}" href="#/admin/${k}">${l}</a>`).join('')}</div>
+      <div id="adm"></div>`;
+    await adminViews[sub]?.($('#adm'));
+  },
+};
+
+function pendingHTML(p) {
+  const wa = state.config.whatsapp ? state.config.whatsapp.replace(/\D/g, '') : '';
+  const msg = encodeURIComponent(`Hola, pagué el plan ${p.plan_name || ''} por Yappy. Código ${p.ref_code}${p.yappy_tx ? ', confirmación ' + p.yappy_tx : ''}. Mi número: ${state.user.phone}`);
+  return `<h1>Pago en revisión</h1>
+    <div class="paper">
+      <p style="margin-top:0">Recibimos tu pago con el código <b>${esc(p.ref_code)}</b>. Lo confirmamos en Yappy y activamos tu acceso; normalmente toma unos minutos.</p>
+      <p class="muted">Cuando esté aprobado, verás el parlay del día en la pestaña Hoy.</p>
+      ${wa ? `<a class="btn green" target="_blank" rel="noopener" href="https://wa.me/${wa.startsWith('507') || wa.length > 8 ? wa : '507' + wa}?text=${msg}">Avisar por WhatsApp</a>` : ''}
+    </div>`;
+}
+
+function authForm(app, mode) {
+  const next = new URLSearchParams(location.hash.split('?')[1] || '').get('next');
+  const reg = mode === 'register';
+  app.innerHTML = `<h1>${reg ? 'Crear cuenta' : 'Iniciar sesión'}</h1>
+    <p class="lead">${reg ? 'Usa tu número de celular. Con él te identificamos cuando pagas por Yappy.' : 'Entra con tu número de celular y tu contraseña.'}</p>
+    <form class="panel" id="authF">
+      ${reg ? '<label for="n">Nombre</label><input id="n" required autocomplete="name">' : ''}
+      <label for="ph">Celular</label><input id="ph" required inputmode="tel" autocomplete="tel" placeholder="6000-0000">
+      <label for="pw">Contraseña</label><input id="pw" type="password" required minlength="6" autocomplete="${reg ? 'new-password' : 'current-password'}">
+      <div id="authErr"></div>
+      <button class="btn" style="margin-top:14px;width:100%">${reg ? 'Crear cuenta' : 'Iniciar sesión'}</button>
+    </form>
+    <p class="muted" style="text-align:center">${reg ? '¿Ya tienes cuenta? <a href="#/entrar' : '¿No tienes cuenta? <a href="#/registro'}${next ? '?next=' + encodeURIComponent(next) : ''}">${reg ? 'Inicia sesión' : 'Créala aquí'}</a></p>`;
+  $('#authF').onsubmit = async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button'); btn.disabled = true;
+    try {
+      const body = { phone: $('#ph').value, password: $('#pw').value };
+      if (reg) body.name = $('#n').value;
+      const { user } = await api(reg ? '/register' : '/login', { method: 'POST', body });
+      state.user = user;
+      location.hash = '#' + (next || (user.is_admin ? '/admin' : user.active ? '/' : '/planes'));
+    } catch (err) { $('#authErr').innerHTML = `<div class="err">${esc(err.message)}</div>`; btn.disabled = false; }
+  };
+}
+
+function compressImage(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const max = 1100, k = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement('canvas'); c.width = img.width * k; c.height = img.height * k;
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(img.src);
+      resolve(c.toDataURL('image/jpeg', 0.72));
+    };
+    img.onerror = () => reject(new Error('No se pudo leer la imagen. Prueba con otra captura.'));
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+/* ---------- administración ---------- */
+const SPORTS = ['Fútbol', 'NFL', 'NCAAF', 'NBA', 'MLB', 'NHL', 'Tenis', 'Otro'];
+const adminViews = {
+  async parlays(el, editing = null) {
+    const { parlays, today } = await api('/admin/parlays');
+    const p = editing || { day: today, title: 'Parlay del día', legs: [{ sport: 'Fútbol', match: '', pick: '', odds: '', time: '' }], stake: '', notes: '' };
+    el.innerHTML = `
+      <form class="panel" id="pf">
+        <div style="font:700 20px var(--display)">${editing ? 'Editar parlay' : 'Publicar parlay'}</div>
+        <div class="row"><div><label for="pd">Fecha</label><input id="pd" type="date" value="${esc(String(p.day).slice(0, 10))}"></div>
+        <div><label for="pt">Título</label><input id="pt" value="${esc(p.title)}"></div></div>
+        <label>Selecciones <span class="muted" style="font-weight:400">— cuota americana (+150, -110) o decimal (2.50)</span></label>
+        <div id="legs"></div>
+        <button type="button" class="btn small ghost" id="addLeg">Añadir selección</button>
+        <div class="row"><div><label for="po">Cuota combinada</label><input id="po" value="${esc(p.total_odds || '')}" placeholder="Se calcula sola"></div>
+        <div><label for="ps">Inversión sugerida</label><input id="ps" value="${esc(p.stake || '')}" placeholder="Ej. 1 unidad"></div></div>
+        <label for="pn">Análisis o notas</label><textarea id="pn">${esc(p.notes || '')}</textarea>
+        <div id="pErr"></div>
+        <div class="row" style="margin-top:14px"><button class="btn">${editing ? 'Guardar cambios' : 'Publicar parlay'}</button>
+        ${editing ? '<button type="button" class="btn ghost" id="cancelEd">Cancelar</button>' : ''}</div>
+      </form>
+      <h2>Publicados</h2>
+      <div id="plist">${parlays.length ? '' : '<p class="muted">Aún no has publicado parlays.</p>'}</div>`;
+
+    const legsEl = $('#legs', el);
+    let legs = p.legs.map((l) => ({ ...l }));
+    let autoOdds = !editing;
+    const drawLegs = () => {
+      legsEl.innerHTML = legs.map((l, i) => `
+        <div class="leg-row" data-i="${i}">
+          <select data-k="sport" aria-label="Deporte">${SPORTS.map((s) => `<option ${s === l.sport ? 'selected' : ''}>${s}</option>`).join('')}</select>
+          <input data-k="match" value="${esc(l.match)}" placeholder="Partido" aria-label="Partido">
+          <input data-k="pick" value="${esc(l.pick)}" placeholder="Selección (ej. Real Madrid ML)" aria-label="Selección">
+          <input data-k="odds" value="${esc(l.odds)}" placeholder="Cuota" aria-label="Cuota">
+          <input data-k="time" value="${esc(l.time)}" placeholder="Hora" aria-label="Hora">
+          <button type="button" class="btn small ghost x" aria-label="Quitar selección" ${legs.length < 2 ? 'disabled' : ''}>✕</button>
+        </div>`).join('');
+    };
+    const refreshOdds = () => { if (autoOdds) $('#po', el).value = combine(legs.filter((l) => l.odds)); };
+    drawLegs();
+    legsEl.addEventListener('input', (e) => {
+      const i = e.target.closest('.leg-row').dataset.i; legs[i][e.target.dataset.k] = e.target.value;
+      if (e.target.dataset.k === 'odds') refreshOdds();
+    });
+    legsEl.addEventListener('click', (e) => {
+      if (!e.target.classList.contains('x')) return;
+      legs.splice(e.target.closest('.leg-row').dataset.i, 1); drawLegs(); refreshOdds();
+    });
+    $('#po', el).addEventListener('input', () => { autoOdds = false; });
+    $('#addLeg', el).onclick = () => { legs.push({ sport: legs.at(-1)?.sport || 'Fútbol', match: '', pick: '', odds: '', time: '' }); drawLegs(); };
+    $('#cancelEd', el)?.addEventListener('click', () => adminViews.parlays(el));
+    $('#pf', el).onsubmit = async (e) => {
+      e.preventDefault();
+      const btn = e.submitter; btn.disabled = true;
+      const body = { day: $('#pd', el).value, title: $('#pt', el).value, legs, total_odds: $('#po', el).value, stake: $('#ps', el).value, notes: $('#pn', el).value };
+      try {
+        await api(editing ? '/admin/parlays/' + editing.id : '/admin/parlays', { method: editing ? 'PUT' : 'POST', body });
+        toast(editing ? 'Cambios guardados' : 'Parlay publicado'); adminViews.parlays(el);
+      } catch (err) { $('#pErr', el).innerHTML = `<div class="err">${esc(err.message)}</div>`; btn.disabled = false; }
+    };
+
+    const list = $('#plist', el);
+    parlays.forEach((pl) => {
+      const wrap = document.createElement('div');
+      wrap.innerHTML = ticketHTML(pl).replace('enter', '') + `
+        <div class="actions">
+          <button class="btn small green" data-r="won">Ganó</button><button class="btn small red" data-r="lost">Perdió</button>
+          <button class="btn small ghost" data-r="void">Nulo</button><button class="btn small ghost" data-r="pending">En juego</button>
+          <button class="btn small ghost" data-a="edit">Editar</button><button class="btn small ghost" data-a="del">Borrar</button>
+        </div>`;
+      wrap.addEventListener('click', async (e) => {
+        const b = e.target.closest('button'); if (!b) return;
+        if (b.dataset.r) { await api(`/admin/parlays/${pl.id}/result`, { method: 'POST', body: { status: b.dataset.r } }); toast('Resultado guardado'); adminViews.parlays(el); }
+        if (b.dataset.a === 'edit') { adminViews.parlays(el, pl); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+        if (b.dataset.a === 'del' && confirm('¿Borrar este parlay? No se puede deshacer.')) { await api('/admin/parlays/' + pl.id, { method: 'DELETE' }); toast('Parlay borrado'); adminViews.parlays(el); }
+      });
+      list.appendChild(wrap);
+    });
+  },
+
+  async pagos(el, status = 'pending') {
+    const { payments } = await api('/admin/payments?status=' + status);
+    el.innerHTML = `<div class="subtabs">${[['pending', 'Por revisar'], ['approved', 'Aprobados'], ['rejected', 'Rechazados']]
+      .map(([k, l]) => `<button class="btn small ${k === status ? 'dark' : 'ghost'}" data-s="${k}">${l}</button>`).join('')}</div>
+      ${status === 'pending' ? '<p class="muted">Busca el código y el número de confirmación en tu Yappy Comercial antes de aprobar.</p>' : ''}
+      ${payments.length ? `<div class="scroll"><table><thead><tr><th>Cliente</th><th>Plan</th><th>Código / Yappy</th><th>Captura</th>${status === 'pending' ? '<th></th>' : '<th>Estado</th>'}</tr></thead><tbody>
+      ${payments.map((p) => `<tr data-id="${p.id}">
+        <td><b>${esc(p.user_name)}</b><br><span class="muted">${esc(p.user_phone)}</span><br><span class="muted">${esc(fmtDate(p.created_at))}</span></td>
+        <td>${esc(p.plan_name)}<br><b>${money(p.amount)}</b></td>
+        <td><b>${esc(p.ref_code)}</b><br>${esc(p.yappy_tx)}</td>
+        <td>${p.proof ? `<img class="proof" src="${esc(p.proof)}" alt="Captura de ${esc(p.user_name)}">` : '<span class="muted">Sin captura</span>'}</td>
+        <td>${status === 'pending' ? `<div style="display:flex;flex-direction:column;gap:6px"><button class="btn small green" data-a="ok">Aprobar</button><button class="btn small red" data-a="no">Rechazar</button></div>`
+          : (status === 'approved' ? 'Aprobado' : 'Rechazado' + (p.note ? `<br><span class="muted">${esc(p.note)}</span>` : ''))}</td></tr>`).join('')}
+      </tbody></table></div>` : '<div class="empty"><b>Nada por aquí</b>Cuando un cliente envíe un pago aparecerá en esta lista.</div>'}`;
+    el.onclick = async (e) => {
+      const b = e.target.closest('button'); const img = e.target.closest('.proof');
+      if (img) { const d = $('#imgDlg'); d.querySelector('img').src = img.src; d.showModal(); return; }
+      if (!b) return;
+      if (b.dataset.s) return adminViews.pagos(el, b.dataset.s);
+      const id = b.closest('tr').dataset.id;
+      if (b.dataset.a === 'ok') { b.disabled = true; await api(`/admin/payments/${id}/approve`, { method: 'POST' }); toast('Pago aprobado, suscripción activada'); }
+      if (b.dataset.a === 'no') {
+        const note = prompt('Motivo del rechazo (lo verá el cliente):', 'No encontramos el pago en Yappy');
+        if (note === null) return;
+        await api(`/admin/payments/${id}/reject`, { method: 'POST', body: { note } }); toast('Pago rechazado');
+      }
+      render();
+    };
+  },
+
+  async clientes(el) {
+    const { users } = await api('/admin/users');
+    const now = new Date();
+    const draw = (filter = '') => {
+      const f = filter.toLowerCase();
+      const rows = users.filter((u) => !f || u.name.toLowerCase().includes(f) || u.phone.includes(f));
+      $('#ulist', el).innerHTML = rows.map((u) => {
+        const on = u.sub_until && new Date(u.sub_until) > now;
+        return `<tr data-id="${u.id}"><td><b>${esc(u.name)}</b>${u.is_admin ? ' <span class="muted">(admin)</span>' : ''}<br><span class="muted">${esc(u.phone)}</span></td>
+          <td>${on ? 'Activo hasta<br>' + esc(fmtDate(u.sub_until)) : '<span class="muted">Sin acceso</span>'}</td>
+          <td>${u.is_admin ? '' : `<div class="row" style="gap:6px"><button class="btn small ghost" data-d="7">+7 días</button><button class="btn small ghost" data-d="30">+30 días</button>${on ? '<button class="btn small red" data-a="revoke">Quitar</button>' : ''}</div>`}</td></tr>`;
+      }).join('') || '<tr><td colspan="3" class="muted">Sin resultados.</td></tr>';
+    };
+    el.innerHTML = `<input id="usearch" placeholder="Buscar por nombre o celular" style="margin-bottom:10px">
+      <div class="scroll"><table><thead><tr><th>Cliente</th><th>Acceso</th><th></th></tr></thead><tbody id="ulist"></tbody></table></div>`;
+    draw();
+    $('#usearch', el).oninput = (e) => draw(e.target.value);
+    $('#ulist', el).onclick = async (e) => {
+      const b = e.target.closest('button'); if (!b) return;
+      const id = b.closest('tr').dataset.id;
+      if (b.dataset.d) { await api(`/admin/users/${id}/days`, { method: 'POST', body: { days: b.dataset.d } }); toast(`+${b.dataset.d} días añadidos`); }
+      if (b.dataset.a === 'revoke' && confirm('¿Quitar el acceso a este cliente?')) { await api(`/admin/users/${id}/revoke`, { method: 'POST' }); toast('Acceso quitado'); }
+      adminViews.clientes(el);
+    };
+  },
+
+  async ajustes(el) {
+    const { settings: s, plans } = await api('/admin/settings');
+    let ps = plans.map((p) => ({ ...p }));
+    el.innerHTML = `<form class="panel" id="sf">
+      <div style="font:700 20px var(--display)">Datos de Yappy</div>
+      <p class="muted" style="margin:4px 0 0">Esto es lo que ve el cliente en la pantalla de pago.</p>
+      <div class="row"><div><label for="yh">Nombre en el Directorio</label><input id="yh" value="${esc(s.yappy_handle)}" placeholder="@tunegocio"></div>
+      <div><label for="yp">Celular Yappy</label><input id="yp" value="${esc(s.yappy_phone)}" placeholder="6000-0000"></div></div>
+      <label for="yn">Nombre que aparece al pagar</label><input id="yn" value="${esc(s.yappy_name)}">
+      <label for="wa">WhatsApp para avisos de pago</label><input id="wa" value="${esc(s.whatsapp)}" placeholder="50760000000">
+      <label for="dc">Aviso legal</label><textarea id="dc">${esc(s.disclaimer)}</textarea>
+      <div style="font:700 20px var(--display);margin-top:22px">Planes</div>
+      <div id="plansEd"></div>
+      <button type="button" class="btn small ghost" id="addPlan">Añadir plan</button>
+      <button class="btn" style="margin-top:16px;width:100%">Guardar ajustes</button></form>`;
+    const drawPlans = () => {
+      $('#plansEd', el).innerHTML = ps.map((p, i) => `<div class="row" data-i="${i}" style="align-items:end">
+        <div><label>Nombre</label><input data-k="name" value="${esc(p.name)}"></div>
+        <div><label>Días</label><input data-k="days" type="number" min="1" value="${esc(p.days)}"></div>
+        <div><label>Precio $</label><input data-k="price" type="number" min="0" step="0.01" value="${esc(p.price)}"></div>
+        <div style="flex:0 0 auto"><label><input data-k="active" type="checkbox" ${p.active !== false ? 'checked' : ''} style="width:auto"> Visible</label></div></div>`).join('');
+    };
+    drawPlans();
+    $('#plansEd', el).addEventListener('input', (e) => {
+      const i = e.target.closest('[data-i]').dataset.i, k = e.target.dataset.k;
+      ps[i][k] = k === 'active' ? e.target.checked : e.target.value;
+    });
+    $('#addPlan', el).onclick = () => { ps.push({ name: 'Nuevo plan', days: 15, price: 18, active: true }); drawPlans(); };
+    $('#sf', el).onsubmit = async (e) => {
+      e.preventDefault();
+      await api('/admin/settings', { method: 'PUT', body: { yappy_handle: $('#yh', el).value, yappy_phone: $('#yp', el).value, yappy_name: $('#yn', el).value, whatsapp: $('#wa', el).value, disclaimer: $('#dc', el).value, plans: ps } });
+      state.config = await api('/config'); toast('Ajustes guardados'); adminViews.ajustes(el);
+    };
+  },
+};
+
+/* ---------- navegación ---------- */
+function drawChrome(route) {
+  const u = state.user;
+  const items = [['/', 'Hoy'], ['/resultados', 'Resultados'], ['/planes', 'Planes']];
+  if (u) items.push(['/cuenta', 'Mi cuenta']); else items.push(['/entrar', 'Entrar']);
+  if (u?.is_admin) items.push(['/admin', 'Panel']);
+  $('#tabs').innerHTML = items.map(([h, l]) => `<a href="#${h}" ${('/' + route) === h || (h === '/' && route === '') ? 'aria-current="page"' : ''}>${l}</a>`).join('');
+  const chip = $('#subChip');
+  if (u && !u.is_admin) { chip.hidden = false; chip.textContent = u.active ? 'Suscripción activa' : 'Sin suscripción'; chip.classList.toggle('on', u.active); }
+  else chip.hidden = true;
+  const name = state.config?.app_name || 'BETSAM';
+  $('#brand').firstChild.textContent = name; document.title = name;
+}
+
+async function render() {
+  const app = $('#app');
+  const [route, ...args] = location.hash.replace(/^#\/?/, '').split('?')[0].split('/');
+  try {
+    const [me] = await Promise.all([api('/me'), state.config ? null : api('/config').then((c) => (state.config = c))]);
+    state.user = me.user;
+    drawChrome(route);
+    const view = { '': 'hoy', resultados: 'resultados', planes: 'planes', pagar: 'pagar', cuenta: 'cuenta', entrar: 'entrar', registro: 'registro', admin: 'admin' }[route] || 'hoy';
+    await views[view](app, ...args);
+    if (state.config?.disclaimer && view !== 'admin') app.insertAdjacentHTML('beforeend', `<p class="disclaimer">${esc(state.config.disclaimer)}</p>`);
+  } catch (err) {
+    app.innerHTML = `<div class="err">${esc(err.message)}</div><button class="btn" onclick="render()">Reintentar</button>`;
+  }
+}
+window.addEventListener('hashchange', () => { render(); window.scrollTo(0, 0); });
+$('#imgDlg').addEventListener('click', (e) => e.currentTarget.close());
+render();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+</script>
+</body>
+</html>
