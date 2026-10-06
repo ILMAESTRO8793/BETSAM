@@ -229,7 +229,7 @@ app.get('/api/parlays/today', wrap(async (req, res) => {
   res.json({
     day,
     locked: true,
-    parlays: rows.map((p) => ({ id: p.id, title: p.title, legs_count: p.legs.length, status: p.status })),
+    parlays: rows.map((p) => ({ id: p.id, title: p.title, legs_count: p.legs.length || String(p.notes || '').split('\n').filter((l) => l.trim()).length, status: p.status })),
   });
 }));
 
@@ -360,13 +360,13 @@ function parseParlay(b) {
     legs,
     total_odds: String(b.total_odds || '').slice(0, 20),
     stake: String(b.stake || '').slice(0, 60),
-    notes: String(b.notes || '').slice(0, 1000),
+    notes: String(b.notes || '').slice(0, 4000),
   };
 }
 
 admin.post('/parlays', wrap(async (req, res) => {
   const p = parseParlay(req.body);
-  if (!p.legs.length) return res.status(400).json({ error: 'Agrega al menos una selección.' });
+  if (!p.legs.length && !p.notes.trim()) return res.status(400).json({ error: 'Escribe el parlay antes de publicar.' });
   const { rows } = await q(
     'INSERT INTO parlays (day, title, legs, total_odds, stake, notes) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
     [p.day, p.title, JSON.stringify(p.legs), p.total_odds, p.stake, p.notes]);
@@ -375,7 +375,7 @@ admin.post('/parlays', wrap(async (req, res) => {
 
 admin.put('/parlays/:id', wrap(async (req, res) => {
   const p = parseParlay(req.body);
-  if (!p.legs.length) return res.status(400).json({ error: 'Agrega al menos una selección.' });
+  if (!p.legs.length && !p.notes.trim()) return res.status(400).json({ error: 'Escribe el parlay antes de publicar.' });
   const { rows } = await q(
     'UPDATE parlays SET day=$1, title=$2, legs=$3, total_odds=$4, stake=$5, notes=$6 WHERE id=$7 RETURNING *',
     [p.day, p.title, JSON.stringify(p.legs), p.total_odds, p.stake, p.notes, req.params.id]);
